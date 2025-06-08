@@ -30,3 +30,6 @@ go.work.sum
 # Editor/IDE
 # .idea/
 # .vscode/
+
+# all file and folder in test\data\validationResults
+test/data/validationResults/*
