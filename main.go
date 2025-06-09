@@ -12,17 +12,56 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type Incident struct {
+	Uri        string      `yaml:"uri"`
+	Message    string      `yaml:"message"`
+	CodeSnip   string      `yaml:"codeSnip"`
+	Variables  interface{} `yaml:"variables"`
+	LineNumber interface{} `yaml:"lineNumber"`
+}
+
+type Violation struct {
+	Incidents []Incident `yaml:"incidents"`
+}
+
+type RuleSet struct {
+	Name       string               `yaml:"name"`
+	Violations map[string]Violation `yaml:"violations"`
+}
+
+func containsAction(slice []ActionType, item ActionType) bool {
+	for _, v := range slice {
+		if v == item {
+			return true
+		}
+	}
+	return false
+}
+
+// define enum for action types
+type ActionType string
+
+const (
+	ActionRun      ActionType = "run"
+	ActionAnalyze  ActionType = "analyze"
+	ActionValidate ActionType = "validate"
+)
+
 func main() {
 	// Mock input parameters for testing purposes
 	appcatApplicationFolder := ``
 	testDataFolder := ``
 	testOutputFolder := ``
-	targetProject := "" //"airsonic-advanced"
+	targetProject := ""
 
-	var actionList []string = []string{"validate"}
+	var actionList []ActionType = []ActionType{ActionAnalyze}
 	var targetList []string
 	var logFileName string
+	var summaryFileName string
 	var timeInFileName = time.Now().Format("20060102_150405")
+
+	var globalIncidents = 0
+	var globalRulesDetails = make(map[string]int)
 
 	// Scan for target project(s)
 	if targetProject != "" {
@@ -33,6 +72,7 @@ func main() {
 		}
 		targetList = append(targetList, targetProject)
 		logFileName = fmt.Sprintf("appcat_test_%s_%s.log", targetProject, timeInFileName)
+		summaryFileName = fmt.Sprintf("appcat_test_%s_%s_summary.csv", targetProject, timeInFileName)
 	} else {
 		entries, err := os.ReadDir(testDataFolder)
 		if err != nil {
@@ -45,6 +85,7 @@ func main() {
 		}
 
 		logFileName = fmt.Sprintf("appcat_test_%s.log", timeInFileName)
+		summaryFileName = fmt.Sprintf("appcat_test_summary_%s.csv", timeInFileName)
 	}
 
 	// Define log file path
@@ -88,7 +129,7 @@ func main() {
 		projectAppcatOutput := filepath.Join(projectOutput, "appcat_output")
 		analyzeOutput := filepath.Join(projectOutput, "analyze_output")
 
-		if contains(actionList, "run") {
+		if containsAction(actionList, ActionRun) {
 			logger.Printf("[1] Would run AppCat analysis for project: %s (output: %s)", target, projectAppcatOutput)
 			// Call RunAppCat function
 			if err := RunAppCat(appcatApplicationFolder, projectPath, projectAppcatOutput, logger); err != nil {
@@ -98,13 +139,18 @@ func main() {
 			}
 		}
 
-		if contains(actionList, "analyze") {
+		if containsAction(actionList, ActionAnalyze) {
 			logger.Printf("[2] Would run output analysis for project: %s (output: %s)", target, analyzeOutput)
 			// Call AnalyzeOutput function
-			if err := AnalyzeOutput(projectAppcatOutput, analyzeOutput, logger); err != nil {
+			incidentsCount, rulesDetails, err := AnalyzeOutput(projectAppcatOutput, analyzeOutput, logger)
+			if err != nil {
 				logger.Fatalf("[2] Error analyzing output for project %s: %v", target, err)
 			} else {
 				logger.Printf("[2] Successfully analyzed output for project: %s", target)
+				globalIncidents += incidentsCount
+				for rule, count := range rulesDetails {
+					globalRulesDetails[rule] += count
+				}
 			}
 		}
 
@@ -112,6 +158,23 @@ func main() {
 	}
 
 	logger.Printf("Ending AppCat test at %s", time.Now().Format(time.RFC3339))
+	logger.Printf("Total incidents found across all projects: %d", globalIncidents)
+	logger.Printf("Rules details across all projects:")
+	for rule, count := range globalRulesDetails {
+		logger.Printf("  %s: %d", rule, count)
+	}
+
+	summaryFilePath := filepath.Join(testOutputFolder, summaryFileName)
+	summaryFile, err := os.Create(summaryFilePath)
+	if err != nil {
+		logger.Fatalf("Failed to create summary file: %v", err)
+	}
+	defer summaryFile.Close()
+	summaryFile.WriteString("Rule,Incidents\n")
+	for rule, count := range globalRulesDetails {
+		summaryFile.WriteString(fmt.Sprintf("%s,%d\n", rule, count))
+	}
+	logger.Printf("[Analyze] Global summary written to: %s\n", summaryFilePath)
 }
 
 func RunAppCat(appcatApplicationFolder, candidateProjectFolder, appcatOutputFolder string, logger *log.Logger) error {
@@ -154,33 +217,7 @@ func RunAppCat(appcatApplicationFolder, candidateProjectFolder, appcatOutputFold
 	return nil
 }
 
-type Incident struct {
-	Uri        string      `yaml:"uri"`
-	Message    string      `yaml:"message"`
-	CodeSnip   string      `yaml:"codeSnip"`
-	Variables  interface{} `yaml:"variables"`
-	LineNumber interface{} `yaml:"lineNumber"`
-}
-
-type Violation struct {
-	Incidents []Incident `yaml:"incidents"`
-}
-
-type RuleSet struct {
-	Name       string               `yaml:"name"`
-	Violations map[string]Violation `yaml:"violations"`
-}
-
-func contains(slice []string, item string) bool {
-	for _, v := range slice {
-		if v == item {
-			return true
-		}
-	}
-	return false
-}
-
-func AnalyzeOutput(appcatOutputFolder, analyzeOutputFolder string, logger *log.Logger) error {
+func AnalyzeOutput(appcatOutputFolder, analyzeOutputFolder string, logger *log.Logger) (int, map[string]int, error) {
 	logger.Printf("[Analyze] AppCat output: %s\n", appcatOutputFolder)
 	logger.Printf("[Analyze] Analyze output: %s\n", analyzeOutputFolder)
 
@@ -194,7 +231,7 @@ func AnalyzeOutput(appcatOutputFolder, analyzeOutputFolder string, logger *log.L
 	outputFile := filepath.Join(appcatOutputFolder, "output.yaml")
 	if _, err := os.Stat(outputFile); os.IsNotExist(err) {
 		logger.Fatalf("No output.yaml found in folder: %s\n", appcatOutputFolder)
-		return nil
+		return 0, nil, nil
 	}
 
 	data, err := os.ReadFile(outputFile)
@@ -223,14 +260,27 @@ func AnalyzeOutput(appcatOutputFolder, analyzeOutputFolder string, logger *log.L
 						logger.Printf("    [Analyze] Processing incidents: %v %v\n", incident.Uri, incident.LineNumber)
 						incidentFileName := fmt.Sprintf("%s_%d", ruleName, i)
 						incidentFilePath := filepath.Join(analyzeOutputFolder, incidentFileName)
+
+						var variablesStr string
+						if incident.Variables != nil {
+							variablesMap, ok := incident.Variables.(map[string]interface{})
+							if ok {
+								for key, value := range variablesMap {
+									variablesStr += "\n  " + fmt.Sprintf("%s: %v", key, value)
+								}
+							} else {
+								variablesStr = fmt.Sprintf("%v", incident.Variables)
+							}
+						} else {
+							variablesStr = "nil"
+						}
+
 						incidentDetails := fmt.Sprintf(
 							"ruleSet: %s\nrule: %s\nuri: %v\nmessage: %v\ncodeSnip: %v\nvariables: %v\nlineNumber: %v\n",
-							rulesetName, ruleName, incident.Uri, incident.Message, incident.CodeSnip, incident.Variables, incident.LineNumber,
+							rulesetName, ruleName, incident.Uri, incident.Message, incident.CodeSnip, variablesStr, incident.LineNumber,
 						)
 						if err := os.WriteFile(incidentFilePath, []byte(incidentDetails), 0644); err != nil {
 							logger.Fatalf("Failed to write incident file: %v", err)
-						} else {
-							logger.Printf("    [Analyze] Incident details saved to: %s\n", incidentFilePath)
 						}
 					}
 				} else {
@@ -248,5 +298,18 @@ func AnalyzeOutput(appcatOutputFolder, analyzeOutputFolder string, logger *log.L
 		logger.Printf("  %s: %d\n", rule, count)
 	}
 
-	return nil
+	// write summary to analyze output folder
+	summaryFilePath := filepath.Join(analyzeOutputFolder, "summary.csv")
+	summaryFile, err := os.Create(summaryFilePath)
+	if err != nil {
+		logger.Fatalf("Failed to create summary file: %v", err)
+	}
+	defer summaryFile.Close()
+	summaryFile.WriteString("Rule,Incidents\n")
+	for rule, count := range rulesDetails {
+		summaryFile.WriteString(fmt.Sprintf("%s,%d\n", rule, count))
+	}
+	logger.Printf("[Analyze] Summary written to: %s\n", summaryFilePath)
+
+	return totalIncidents, rulesDetails, nil
 }
