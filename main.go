@@ -1,14 +1,19 @@
 package main
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/ai/azopenai"
+	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"gopkg.in/yaml.v3"
 )
 
@@ -47,6 +52,15 @@ const (
 	ActionValidate ActionType = "validate"
 )
 
+// define some constants for the application
+const (
+	PromptExtension string = ".prompt"
+	JsonExtension   string = ".json"
+	CSVExtension    string = ".csv"
+	YamlExtension   string = ".yaml"
+	LogExtension    string = ".log"
+)
+
 func main() {
 	// Mock input parameters for testing purposes
 	appcatApplicationFolder := ``
@@ -56,12 +70,13 @@ func main() {
 
 	var actionList []ActionType = []ActionType{ActionAnalyze}
 	var targetList []string
+	var globalFilePrefix string = "appcat_test"
 	var logFileName string
 	var summaryFileName string
 	var timeInFileName = time.Now().Format("20060102_150405")
 
 	var globalIncidents = 0
-	var globalRulesDetails = make(map[string]int)
+	var globalRulesDetails = make(map[string](map[string]int))
 
 	// Scan for target project(s)
 	if targetProject != "" {
@@ -71,8 +86,8 @@ func main() {
 			log.Fatalf("The specified target project '%s' does not exist in the test data folder.", targetProject)
 		}
 		targetList = append(targetList, targetProject)
-		logFileName = fmt.Sprintf("appcat_test_%s_%s.log", targetProject, timeInFileName)
-		summaryFileName = fmt.Sprintf("appcat_test_%s_%s_summary.csv", targetProject, timeInFileName)
+		globalFilePrefix = fmt.Sprintf("%s_%s_%s", globalFilePrefix, targetProject, timeInFileName)
+
 	} else {
 		entries, err := os.ReadDir(testDataFolder)
 		if err != nil {
@@ -83,10 +98,10 @@ func main() {
 				targetList = append(targetList, entry.Name())
 			}
 		}
-
-		logFileName = fmt.Sprintf("appcat_test_%s.log", timeInFileName)
-		summaryFileName = fmt.Sprintf("appcat_test_summary_%s.csv", timeInFileName)
+		globalFilePrefix = fmt.Sprintf("%s_%s", globalFilePrefix, timeInFileName)
 	}
+	logFileName = fmt.Sprintf("%s%s", globalFilePrefix, LogExtension)
+	summaryFileName = fmt.Sprintf("%s_summary%s", globalFilePrefix, CSVExtension)
 
 	// Define log file path
 	logFilePath := filepath.Join(testOutputFolder, logFileName)
@@ -149,30 +164,49 @@ func main() {
 				logger.Printf("[2] Successfully analyzed output for project: %s", target)
 				globalIncidents += incidentsCount
 				for rule, count := range rulesDetails {
-					globalRulesDetails[rule] += count
+					// globalRulesDetails[rule][target] = count
+					logger.Printf("[2] Rule: %s, Target, %s, Count: %d", rule, target, count)
+					if _, exists := globalRulesDetails[rule]; !exists {
+						globalRulesDetails[rule] = make(map[string]int)
+					}
+					globalRulesDetails[rule][target] = count
 				}
 			}
+		}
+
+		if containsAction(actionList, ActionValidate) {
+			logger.Printf("[3] Would validate the results of project: %s", target)
+			ValidateOutput(analyzeOutput, logger)
+			logger.Printf("[3] Validation completed for project: %s", target)
 		}
 
 		logger.Printf("Completed processing for project: %s", target)
 	}
 
 	logger.Printf("Ending AppCat test at %s", time.Now().Format(time.RFC3339))
-	logger.Printf("Total incidents found across all projects: %d", globalIncidents)
-	logger.Printf("Rules details across all projects:")
-	for rule, count := range globalRulesDetails {
-		logger.Printf("  %s: %d", rule, count)
-	}
 
+	// Generate summary report
+	logger.Printf("Total incidents found across all projects: %d", globalIncidents)
 	summaryFilePath := filepath.Join(testOutputFolder, summaryFileName)
 	summaryFile, err := os.Create(summaryFilePath)
 	if err != nil {
 		logger.Fatalf("Failed to create summary file: %v", err)
 	}
 	defer summaryFile.Close()
-	summaryFile.WriteString("Rule,Incidents\n")
-	for rule, count := range globalRulesDetails {
-		summaryFile.WriteString(fmt.Sprintf("%s,%d\n", rule, count))
+
+	// contact all targets in targetList to a line, with comma separated
+	targetNameList := strings.Join(targetList, ",")
+	summaryFile.WriteString(fmt.Sprintf("Rule,%s\n", targetNameList))
+	for rule, targetHash := range globalRulesDetails {
+		rowValue := rule
+		for _, target := range targetList {
+			if count, exists := targetHash[target]; exists {
+				rowValue += fmt.Sprintf(",%d", count)
+			} else {
+				rowValue += ",0"
+			}
+			summaryFile.WriteString(fmt.Sprintf("%s\n", rowValue))
+		}
 	}
 	logger.Printf("[Analyze] Global summary written to: %s\n", summaryFilePath)
 }
@@ -258,7 +292,7 @@ func AnalyzeOutput(appcatOutputFolder, analyzeOutputFolder string, logger *log.L
 						totalIncidents++
 						rulesDetails[ruleName]++
 						logger.Printf("    [Analyze] Processing incidents: %v %v\n", incident.Uri, incident.LineNumber)
-						incidentFileName := fmt.Sprintf("%s_%d", ruleName, i)
+						incidentFileName := fmt.Sprintf("%s_%d%s", ruleName, i, PromptExtension)
 						incidentFilePath := filepath.Join(analyzeOutputFolder, incidentFileName)
 
 						var variablesStr string
@@ -299,7 +333,8 @@ func AnalyzeOutput(appcatOutputFolder, analyzeOutputFolder string, logger *log.L
 	}
 
 	// write summary to analyze output folder
-	summaryFilePath := filepath.Join(analyzeOutputFolder, "summary.csv")
+	summaryFileName := fmt.Sprintf("%s%s", "summary", CSVExtension)
+	summaryFilePath := filepath.Join(analyzeOutputFolder, summaryFileName)
 	summaryFile, err := os.Create(summaryFilePath)
 	if err != nil {
 		logger.Fatalf("Failed to create summary file: %v", err)
@@ -313,3 +348,136 @@ func AnalyzeOutput(appcatOutputFolder, analyzeOutputFolder string, logger *log.L
 
 	return totalIncidents, rulesDetails, nil
 }
+
+func ValidateOutput(analyzeOutputFolder string, logger *log.Logger) error {
+	logger.Printf("[Validate] Validating output in folder: %s\n", analyzeOutputFolder)
+	azureOpenAIEndpoint := "https://openai-acl4o26y5lrhk.openai.azure.com/"
+	cred, err := azidentity.NewDefaultAzureCredential(nil)
+	if err != nil {
+		logger.Fatalf("ERROR: %s", err)
+	}
+	client, err := azopenai.NewClient(azureOpenAIEndpoint, cred, nil)
+	if err != nil {
+		logger.Fatalf("ERROR: %s", err)
+	}
+
+	// For range in analyzeOutputFolder, check for files with .prompt extension
+	files, err := os.ReadDir(analyzeOutputFolder)
+	if err != nil {
+		logger.Fatalf("Failed to read analyze output folder: %v", err)
+	}
+	for _, file := range files {
+		if !file.IsDir() && filepath.Ext(file.Name()) == PromptExtension {
+			filePath := filepath.Join(analyzeOutputFolder, file.Name())
+			promptData, err := os.ReadFile(filePath)
+			if err != nil {
+				logger.Fatalf("failed to read %s: %v", filePath, err)
+			}
+			userPrompt := fmt.Sprintf("[Tool Result]\n%s[/Tool Result]", promptData)
+			logger.Printf("[Validate] Validating file: %s\n", filePath)
+			// Call ValidateSingleIncident function
+
+			result := ValidateSingleIncident(userPrompt, client, logger)
+
+			// Save the result to a file
+			resultFileName := fmt.Sprintf("%s%s", file.Name(), YamlExtension)
+			resultFilePath := filepath.Join(analyzeOutputFolder, resultFileName)
+			resultData, err := yaml.Marshal(result)
+			if err != nil {
+				logger.Fatalf("Failed to marshal validation result: %v", err)
+			}
+			if err := os.WriteFile(resultFilePath, resultData, 0644); err != nil {
+				logger.Fatalf("Failed to write validation result file: %v", err)
+			}
+
+		}
+	}
+	return nil
+}
+
+func ValidateSingleIncident(userPrompt_incident string, client *azopenai.Client, logger *log.Logger) map[string]interface{} {
+	result := map[string]interface{}{} // Initialize result map
+
+	// logger.Printf("[Validate] Validating incident: %s\n", userPrompt_incident)
+
+	// Call Azure OpenAI API to validate the incident, using managed identity
+	deploymentName := "llm-gpt-4o"
+
+	// Define the parameters
+	maxTokens := int32(800)
+	temperature := float32(0.7)
+	topP := float32(0.95)
+	frequencyPenalty := float32(0)
+	presencePenalty := float32(0)
+	var stop []string
+
+	messages := []azopenai.ChatRequestMessageClassification{
+		&azopenai.ChatRequestSystemMessage{Content: azopenai.NewChatRequestSystemMessageContent(SystemPrompt)},
+		&azopenai.ChatRequestUserMessage{Content: azopenai.NewChatRequestUserMessageContent(userPrompt_incident)},
+	}
+
+	resp, err := client.GetChatCompletions(context.TODO(), azopenai.ChatCompletionsOptions{
+		Messages:         messages,
+		DeploymentName:   &deploymentName,
+		MaxTokens:        &maxTokens,
+		Temperature:      &temperature,
+		TopP:             &topP,
+		FrequencyPenalty: &frequencyPenalty,
+		PresencePenalty:  &presencePenalty,
+		Stop:             stop,
+	}, nil)
+	if err != nil {
+		log.Fatalf("ERROR: %s", err)
+	}
+
+	// Print the response
+	for _, choice := range resp.Choices {
+		if choice.Message != nil && choice.Message.Content != nil {
+			content := *choice.Message.Content
+			start := strings.Index(content, "{")
+			end := strings.LastIndex(content, "}")
+			if start == -1 || end == -1 || start >= end {
+				logger.Fatalf("Invalid response format: %s", content)
+			}
+			jsonContent := content[start : end+1] // Extract the JSON part
+			logger.Printf("Extracted JSON content: %s\n", jsonContent)
+
+			// get "Result" and "Reason" from the json response and update the result map
+			if err := json.Unmarshal([]byte(jsonContent), &result); err != nil {
+				logger.Fatalf("Failed to unmarshal response: %v", err)
+			}
+			logger.Printf("Validation result: %v\n", result)
+		}
+	}
+	return result
+}
+
+// Const system prompt for AI validation
+const SystemPrompt = `You are an expert software engineer. 
+You will receive a [Tool Result] produced by a Azure Migrate application and code assessment for Java. This tool is designed to help organizations modernize their Java applications to reduce costs and accelerate innovation. It uses advanced static analysis techniques to understand application structure and dependencies, and provides guidance for refactoring and migrating applications to Azure.
+Each result is presented in YAML format and contains the following fields:
+  - uri: File path that contains the matching code.
+  - message: A description of the identified issue or migration recommendation.
+  - codesnip: A code snippet from the source that matches the rule.
+  - lineNumber: The specific line number in the file where the code appears.
+  - variables: The relevant variables or symbols identified in the code snippet.
+Verify whether the message, uri, codesnip, lineNumber, and variables are consistent and logically aligned.
+Common false positive is:
+  - Code match is in a README or documentation file.
+  - Code match is a comment, not actual executable code.
+  - Code match is clearly unrelated to the message or incorrect.
+  - Any part of the result does not make logical sense or seems incorrectly matched.
+
+Only need to return result with Json. [Result Sample]
+
+[Result Sample]
+If all fields are aligned and support the same finding, respond with:
+{
+  "Result": "true"
+}
+If they are not aligned, respond with:
+{
+  "Result": "false",
+  "Reason": "<brief explanation of the misalignment>"
+}
+[/Result Sample]`
