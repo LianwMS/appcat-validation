@@ -205,8 +205,8 @@ func main() {
 			} else {
 				rowValue += ",0"
 			}
-			summaryFile.WriteString(fmt.Sprintf("%s\n", rowValue))
 		}
+		summaryFile.WriteString(fmt.Sprintf("%s\n", rowValue))
 	}
 	logger.Printf("[Analyze] Global summary written to: %s\n", summaryFilePath)
 }
