@@ -33,3 +33,5 @@ go.work.sum
 
 # all file and folder in test\data\validationResults
 test/data/validationResults/*
+testResults/*
+src/appcat_validation.exe

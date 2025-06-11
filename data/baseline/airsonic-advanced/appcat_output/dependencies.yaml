@@ -1,0 +1,305 @@
+- fileURI: file:///C:/Users/lianw/AppCat1/appcat-validation/data/projects/airsonic-advanced/airsonic-main/pom.xml
+  provider: java
+  dependencies:
+  - name: com.auth0.java-jwt
+    version: 3.15.0
+    extras:
+      artifactId: java-jwt
+      groupId: com.auth0
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced/airsonic-main/pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\com\auth0\java-jwt\3.15.0
+  - name: com.github.junrar.junrar
+    version: 7.4.1
+    extras:
+      artifactId: junrar
+      groupId: com.github.junrar
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced/airsonic-main/pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\com\github\junrar\junrar\7.4.1
+  - name: com.github.muff1nman.chameleon.core
+    version: 2.0.0-RELEASE
+    extras:
+      artifactId: core
+      groupId: com.github.muff1nman.chameleon
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced/airsonic-main/pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\com\github\muff1nman\chameleon\core\2.0.0-RELEASE
+  - name: com.github.muff1nman.chameleon.playlist-all
+    version: 2.0.0-RELEASE
+    extras:
+      artifactId: playlist-all
+      groupId: com.github.muff1nman.chameleon
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced/airsonic-main/pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\com\github\muff1nman\chameleon\playlist-all\2.0.0-RELEASE
+  - name: com.github.muff1nman.chameleon.playlist-xspf
+    version: 2.0.0-RELEASE
+    extras:
+      artifactId: playlist-xspf
+      groupId: com.github.muff1nman.chameleon
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced/airsonic-main/pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\com\github\muff1nman\chameleon\playlist-xspf\2.0.0-RELEASE
+  - name: com.google.code.findbugs.jsr305
+    version: 3.0.2
+    extras:
+      artifactId: jsr305
+      groupId: com.google.code.findbugs
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced/airsonic-main/pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\com\google\code\findbugs\jsr305\3.0.2
+  - name: com.hoodcomputing.natpmp
+    version: "0.1"
+    extras:
+      artifactId: natpmp
+      groupId: com.hoodcomputing
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced/airsonic-main/pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\com\hoodcomputing\natpmp\0.1
+  - name: com.mattbertolini.liquibase-slf4j
+    version: 4.0.0
+    extras:
+      artifactId: liquibase-slf4j
+      groupId: com.mattbertolini
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced/airsonic-main/pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\com\mattbertolini\liquibase-slf4j\4.0.0
+  - name: commons-beanutils.commons-beanutils
+    version: 1.9.4
+    extras:
+      artifactId: commons-beanutils
+      groupId: commons-beanutils
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced/airsonic-main/pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\commons-beanutils\commons-beanutils\1.9.4
+  - name: commons-fileupload.commons-fileupload
+    version: "1.4"
+    extras:
+      artifactId: commons-fileupload
+      groupId: commons-fileupload
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced/airsonic-main/pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\commons-fileupload\commons-fileupload\1.4
+  - name: commons-lang.commons-lang
+    version: "2.6"
+    extras:
+      artifactId: commons-lang
+      groupId: commons-lang
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced/airsonic-main/pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\commons-lang\commons-lang\2.6
+  - name: de.triology.recaptchav2-java.recaptchav2-java
+    version: 1.0.4
+    extras:
+      artifactId: recaptchav2-java
+      groupId: de.triology.recaptchav2-java
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced/airsonic-main/pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\de\triology\recaptchav2-java\recaptchav2-java\1.0.4
+  - name: de.u-mass.lastfm-java
+    version: 0.1.2
+    extras:
+      artifactId: lastfm-java
+      groupId: de.u-mass
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced/airsonic-main/pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\de\u-mass\lastfm-java\0.1.2
+  - name: jakarta.servlet.jsp.jakarta.servlet.jsp-api
+    version: 2.3.6
+    extras:
+      artifactId: jakarta.servlet.jsp-api
+      groupId: jakarta.servlet.jsp
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced/airsonic-main/pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\jakarta\servlet\jsp\jakarta.servlet.jsp-api\2.3.6
+  - name: net.jthink.jaudiotagger
+    version: 3.0.1
+    extras:
+      artifactId: jaudiotagger
+      groupId: net.jthink
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced/airsonic-main/pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\net\jthink\jaudiotagger\3.0.1
+  - name: net.sargue.java-time-jsptags
+    version: 1.1.4
+    extras:
+      artifactId: java-time-jsptags
+      groupId: net.sargue
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced/airsonic-main/pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\net\sargue\java-time-jsptags\1.1.4
+  - name: org.airsonic.player.airsonic-sonos-api
+    extras:
+      artifactId: airsonic-sonos-api
+      groupId: org.airsonic.player
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced/airsonic-main/pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\org\airsonic\player\airsonic-sonos-api
+  - name: org.airsonic.player.subsonic-rest-api
+    extras:
+      artifactId: subsonic-rest-api
+      groupId: org.airsonic.player
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced/airsonic-main/pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\org\airsonic\player\subsonic-rest-api
+  - name: org.apache.commons.commons-collections4
+    version: "4.4"
+    extras:
+      artifactId: commons-collections4
+      groupId: org.apache.commons
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced/airsonic-main/pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\org\apache\commons\commons-collections4\4.4
+  - name: org.apache.commons.commons-compress
+    version: "1.21"
+    extras:
+      artifactId: commons-compress
+      groupId: org.apache.commons
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced/airsonic-main/pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\org\apache\commons\commons-compress\1.21
+  - name: org.apache.commons.commons-configuration2
+    version: 2.8.0
+    extras:
+      artifactId: commons-configuration2
+      groupId: org.apache.commons
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced/airsonic-main/pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\org\apache\commons\commons-configuration2\2.8.0
+  - name: org.apache.lucene.lucene-analyzers-common
+    version: 8.9.0
+    extras:
+      artifactId: lucene-analyzers-common
+      groupId: org.apache.lucene
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced/airsonic-main/pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\org\apache\lucene\lucene-analyzers-common\8.9.0
+  - name: org.apache.lucene.lucene-core
+    version: 8.9.0
+    extras:
+      artifactId: lucene-core
+      groupId: org.apache.lucene
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced/airsonic-main/pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\org\apache\lucene\lucene-core\8.9.0
+  - name: org.apache.maven.maven-artifact
+    version: 3.6.0
+    extras:
+      artifactId: maven-artifact
+      groupId: org.apache.maven
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced/airsonic-main/pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\org\apache\maven\maven-artifact\3.6.0
+  - name: org.apache.taglibs.taglibs-standard-impl
+    version: 1.2.5
+    extras:
+      artifactId: taglibs-standard-impl
+      groupId: org.apache.taglibs
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced/airsonic-main/pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\org\apache\taglibs\taglibs-standard-impl\1.2.5
+  - name: org.bouncycastle.bcprov-jdk15on
+    version: "1.70"
+    extras:
+      artifactId: bcprov-jdk15on
+      groupId: org.bouncycastle
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced/airsonic-main/pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\org\bouncycastle\bcprov-jdk15on\1.70
+  - name: org.eclipse.persistence.org.eclipse.persistence.moxy
+    version: 2.7.8
+    extras:
+      artifactId: org.eclipse.persistence.moxy
+      groupId: org.eclipse.persistence
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced/airsonic-main/pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\org\eclipse\persistence\org.eclipse.persistence.moxy\2.7.8
+  - name: org.fourthline.cling.cling-core
+    version: 2.0.1
+    extras:
+      artifactId: cling-core
+      groupId: org.fourthline.cling
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced/airsonic-main/pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\org\fourthline\cling\cling-core\2.0.1
+  - name: org.fourthline.cling.cling-support
+    version: 2.0.1
+    extras:
+      artifactId: cling-support
+      groupId: org.fourthline.cling
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced/airsonic-main/pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\org\fourthline\cling\cling-support\2.0.1
+  - name: org.glassfish.web.jakarta.servlet.jsp.jstl
+    version: 1.2.6
+    extras:
+      artifactId: jakarta.servlet.jsp.jstl
+      groupId: org.glassfish.web
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced/airsonic-main/pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\org\glassfish\web\jakarta.servlet.jsp.jstl\1.2.6
+  - name: org.hsqldb.hsqldb
+    version: 2.5.0
+    extras:
+      artifactId: hsqldb
+      groupId: org.hsqldb
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced/airsonic-main/pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\org\hsqldb\hsqldb\2.5.0
+  - name: org.jdom.jdom
+    version: 2.0.2
+    extras:
+      artifactId: jdom
+      groupId: org.jdom
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced/airsonic-main/pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\org\jdom\jdom\2.0.2
+  - name: org.seamless.seamless-util
+    version: 1.1.0
+    extras:
+      artifactId: seamless-util
+      groupId: org.seamless
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced/airsonic-main/pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\org\seamless\seamless-util\1.1.0
+  - name: org.tukaani.xz
+    version: "1.8"
+    extras:
+      artifactId: xz
+      groupId: org.tukaani
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced/airsonic-main/pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\org\tukaani\xz\1.8
+  - name: taglibs.string
+    version: 1.1.0
+    extras:
+      artifactId: string
+      groupId: taglibs
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced/airsonic-main/pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\taglibs\string\1.1.0
+- fileURI: file:///C:/Users/lianw/AppCat1/appcat-validation/data/projects/airsonic-advanced/pom.xml
+  provider: java
+  dependencies:
+  - name: com.google.guava.guava
+    version: 30.1-jre
+    extras:
+      artifactId: guava
+      groupId: com.google.guava
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced\pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\com\google\guava\guava\30.1-jre
+  - name: commons-io.commons-io
+    version: 2.10.0
+    extras:
+      artifactId: commons-io
+      groupId: commons-io
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced\pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\commons-io\commons-io\2.10.0
+  - name: jakarta.jws.jakarta.jws-api
+    version: 1.1.1
+    extras:
+      artifactId: jakarta.jws-api
+      groupId: jakarta.jws
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced\pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\jakarta\jws\jakarta.jws-api\1.1.1
+  - name: org.apache.ant.ant
+    version: 1.10.5
+    extras:
+      artifactId: ant
+      groupId: org.apache.ant
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced\pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\org\apache\ant\ant\1.10.5
+  - name: org.apache.cxf.cxf-bom
+    version: 3.4.3
+    extras:
+      artifactId: cxf-bom
+      groupId: org.apache.cxf
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced\pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\org\apache\cxf\cxf-bom\3.4.3
+  - name: org.jsoup.jsoup
+    version: 1.15.3
+    extras:
+      artifactId: jsoup
+      groupId: org.jsoup
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced\pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\org\jsoup\jsoup\1.15.3
+  - name: org.jvnet.staxex.stax-ex
+    version: 1.8.2
+    extras:
+      artifactId: stax-ex
+      groupId: org.jvnet.staxex
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced\pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\org\jvnet\staxex\stax-ex\1.8.2
+  - name: org.ow2.asm.asm
+    version: "9.0"
+    extras:
+      artifactId: asm
+      groupId: org.ow2.asm
+      pomPath: C:\Users\lianw\AppCat1\appcat-validation\data\projects\airsonic-advanced\pom.xml
+    prefix: file://C:\Users\lianw\.m2\repository\org\ow2\asm\asm\9.0
