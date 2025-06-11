@@ -1,0 +1,3 @@
+[submodule "data/projects/airsonic-advanced"]
+	path = data/projects/airsonic-advanced
+	url = https://github.com/airsonic-advanced/airsonic-advanced
