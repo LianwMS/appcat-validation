@@ -31,19 +31,26 @@ var signs = Signs{
 	FAIL: "- [ ] :x:",
 }
 
-type ItemResultFormatStruct struct {
-	PASS    string
-	FAIL    string
-	DETAILS string
-	SUBITEM string
-}
+// type ItemResultFormatStruct struct {
+// 	PASS    string
+// 	FAIL    string
+// 	DETAILS string
+// 	SUBITEM string
+// }
 
-var ItemResultFormat = ItemResultFormatStruct{
-	PASS:    signs.PASS + " <b>%s</b>.",
-	FAIL:    signs.FAIL + " <b>%s</b>. \n\n%s\n",
-	DETAILS: "  <details>\n  <summary> Details </summary>\n\n  %s\n\n</details>",
-	SUBITEM: "  %s %s",
-}
+// var ItemResultFormat = ItemResultFormatStruct{
+// 	PASS:    signs.PASS + " <b>%s</b>.",
+// 	FAIL:    signs.FAIL + " <b>%s</b>. \n\n%s\n",
+// 	DETAILS: "  <details>\n  <summary> Details </summary>\n\n  %s\n\n</details>",
+// 	SUBITEM: "  %s %s",
+// }
+
+const (
+	ItemResultFormatPASS    = "- [x] <b>%s</b>."
+	ItemResultFormatFAIL    = "- [ ] :x: <b>%s</b>. \n\n%s\n"
+	ItemResultFormatDETAILS = "  <details>\n  <summary> Details </summary>\n\n  %s\n\n</details>"
+	ItemResultFormatSUBITEM = "  %s %s"
+)
 
 type ActionType string
 
@@ -122,20 +129,26 @@ func (tc *TestCase) getIncidentsSummaryFile() string {
 	return filepath.Join(tc.getAnalysisOutputFolder(), fmt.Sprintf("%s%s", "incidents_summary", CSVExtension))
 }
 
-func (tc *TestCase) Run() (string, error) {
+func (tc *TestCase) Run() (string, int, map[string]int, error) {
 	logger := logger.Get()
+	resultMessage := ""
+	icmCount := -1
+	analyzeDetails := make(map[string]int)
 
 	if containsAction(tc.ActionList, ActionRun) {
 		if _, err := tc.RunAppCat(); err != nil {
 			logger.Printf("[AppCat] Error running AppCat for project %s: %v", tc.Name, err)
-			return "", fmt.Errorf("error running AppCat for project %s: %w", tc.Name, err)
+			return "", -1, nil, fmt.Errorf("error running AppCat for project %s: %w", tc.Name, err)
 		}
 	}
 
 	if containsAction(tc.ActionList, ActionAnalyze) {
-		if _, _, err := tc.RunAnalyze(); err != nil {
+		if count, details, err := tc.RunAnalyze(); err != nil {
 			logger.Printf("[Analyze] Error analyzing output for project %s: %v", tc.Name, err)
-			return "", fmt.Errorf("error analyzing output for project %s: %w", tc.Name, err)
+			return "", -1, nil, fmt.Errorf("error analyzing output for project %s: %w", tc.Name, err)
+		} else {
+			analyzeDetails = details
+			icmCount = count
 		}
 	}
 
@@ -143,22 +156,20 @@ func (tc *TestCase) Run() (string, error) {
 		_, caseResults, err := tc.RunValidate()
 		if err != nil {
 			logger.Printf("[Validate] Error validating output for project %s: %v", tc.Name, err)
-			return "", fmt.Errorf("error validating output for project %s: %w", tc.Name, err)
+			return "", -1, nil, fmt.Errorf("error validating output for project %s: %w", tc.Name, err)
 		}
 		if len(caseResults) == 0 {
-			resultMessage := fmt.Sprintf(ItemResultFormat.PASS, tc.Name)
-			return resultMessage, nil
+			resultMessage = fmt.Sprintf(ItemResultFormatPASS, tc.Name)
 		} else {
 			details := ""
 			for _, value := range caseResults {
 				details += value + lineDelimiter
 			}
-			resultMessage := fmt.Sprintf(ItemResultFormat.FAIL, tc.Name, fmt.Sprintf(ItemResultFormat.DETAILS, details))
-			return resultMessage, nil
+			resultMessage = fmt.Sprintf(ItemResultFormatFAIL, tc.Name, fmt.Sprintf(ItemResultFormatDETAILS, details))
 		}
 	}
 
-	return "passed", nil
+	return resultMessage, icmCount, analyzeDetails, nil
 }
 
 func (tc *TestCase) RunAppCat() (string, error) {

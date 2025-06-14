@@ -15,6 +15,7 @@ import (
 const (
 	LogExtension        string = ".log"
 	TestResultExtension string = ".md"
+	CSVExtension        string = ".csv"
 )
 
 func main() {
@@ -54,6 +55,7 @@ func main() {
 	logger.Printf("Target Projects List: %s", *repoListFile)
 	logger.Printf("Target Projects Found: %s", strings.Join(targetList, "\n"))
 
+	actionList := []testcase.ActionType{testcase.ActionRun, testcase.ActionValidate}
 	testCases := []testcase.TestCase{}
 
 	// Initialize test case
@@ -64,67 +66,100 @@ func main() {
 			ProjectFolder:     filepath.Join(*sourceRepoFolder, target),
 			BaseLineFolder:    filepath.Join(*baselineFolder, target, "appcat_output"),
 			OutputFolder:      filepath.Join(*outputFolder, target),
-			ActionList:        []testcase.ActionType{testcase.ActionRun, testcase.ActionValidate},
+			ActionList:        actionList,
 		}
 		logger.Printf("%s Created", testCase.GetInfo())
 		testCases = append(testCases, testCase)
 	}
 	logger.Printf("Total Test Cases: %d", len(testCases))
 
-	testResults := make(map[string]string)
+	fullResults := make(map[string]string)
+	fullIncidentsCount := 0
+	fullIncidentDetails := make(map[string](map[string]int))
 	for _, testCase := range testCases {
 		logger.Printf("Processing Test Case: %s", testCase.Name)
-		result, caseErr := testCase.Run()
+		resultMessage, resultCount, resultDetails, caseErr := testCase.Run()
 		if caseErr != nil {
 			logger.Printf("Error running test case %s: %v", testCase.Name, caseErr)
-			testResults[testCase.Name] = fmt.Sprintf("Error: %v", caseErr)
+			fullResults[testCase.Name] = fmt.Sprintf("Error: %v", caseErr)
 		}
-		testResults[testCase.Name] = result
+		fullResults[testCase.Name] = resultMessage
+		if resultCount >= 0 {
+			fullIncidentsCount += resultCount
+		}
+		if resultDetails != nil {
+			fullIncidentDetails[testCase.Name] = resultDetails
+		}
 		logger.Printf("Completed Test Case: %s", testCase.Name)
 	}
 
 	// Testoutput file path
-	testOutputFilePath := filepath.Join(*outputFolder, fmt.Sprintf("%s_%s%s", globalFilePrefix, timeInFileName, TestResultExtension))
+	resultFilePath := filepath.Join(*outputFolder, fmt.Sprintf("%s_%s%s", globalFilePrefix, timeInFileName, TestResultExtension))
 
 	// Write test results to output file
-	testOutputFile, err := os.Create(testOutputFilePath)
+	testOutputFile, err := os.Create(resultFilePath)
 	if err != nil {
 		logger.Fatalf("Failed to create test output file: %v", err)
 	}
 	defer testOutputFile.Close()
 	// Write header
 	testOutputFile.WriteString("# AppCat Test Results\n")
-	for _, result := range testResults {
+	for _, result := range fullResults {
 		testOutputFile.WriteString(result + "\n")
 	}
 
-	// var globalIncidents = 0
-	// var globalRulesDetails = make(map[string](map[string]int))
+	// If actionList contains ActionAnalyze, generate a summary report
+	if fullIncidentsCount > 0 {
+		logger.Printf("Total incidents found across all projects: %d", fullIncidentsCount)
 
-	// // Generate summary report
-	// logger.Printf("Total incidents found across all projects: %d", globalIncidents)
-	// summaryFilePath := filepath.Join(testOutputFolder, summaryFileName)
-	// summaryFile, err := os.Create(summaryFilePath)
-	// if err != nil {
-	// 	logger.Fatalf("Failed to create summary file: %v", err)
-	// }
-	// defer summaryFile.Close()
+		rules := make(map[string]int)
+		for _, targetHash := range fullIncidentDetails {
+			for rule := range targetHash {
+				if _, exists := rules[rule]; !exists {
+					rules[rule] = targetHash[rule]
+				} else {
+					rules[rule] += targetHash[rule]
+				}
+			}
+		}
 
-	// // contact all targets in targetList to a line, with comma separated
-	// targetNameList := strings.Join(targetList, ",")
-	// summaryFile.WriteString(fmt.Sprintf("Rule,%s\n", targetNameList))
-	// for rule, targetHash := range globalRulesDetails {
-	// 	rowValue := rule
-	// 	for _, target := range targetList {
-	// 		if count, exists := targetHash[target]; exists {
-	// 			rowValue += fmt.Sprintf(",%d", count)
-	// 		} else {
-	// 			rowValue += ",0"
-	// 		}
-	// 	}
-	// 	summaryFile.WriteString(fmt.Sprintf("%s\n", rowValue))
-	// }
-	// logger.Printf("[Analyze] Global summary written to: %s\n", summaryFilePath)
+		summaryFilePath := filepath.Join(*outputFolder, fmt.Sprintf("%s_%s%s", globalFilePrefix, timeInFileName, CSVExtension))
+		summaryFile, err := os.Create(summaryFilePath)
+		if err != nil {
+			logger.Fatalf("Failed to create summary file: %v", err)
+		}
+		defer summaryFile.Close()
+
+		targetNameList := strings.Join(targetList, ",")
+		summaryFile.WriteString(fmt.Sprintf("Rule,%s\n", targetNameList))
+		for rule, _ := range rules {
+			rowValue := rule
+			for _, target := range targetList {
+				if targetHash, exists := fullIncidentDetails[target]; exists {
+					if count, exists := targetHash[rule]; exists {
+						rowValue += fmt.Sprintf(",%d", count)
+					} else {
+						rowValue += ", "
+					}
+				} else {
+					rowValue += ", "
+				}
+			}
+			summaryFile.WriteString(fmt.Sprintf("%s\n", rowValue))
+		}
+
+		// for rule, targetHash := range fullIncidentDetails {
+		// 	rowValue := rule
+		// 	for _, target := range targetList {
+		// 		if count, exists := targetHash[target]; exists {
+		// 			rowValue += fmt.Sprintf(",%d", count)
+		// 		} else {
+		// 			rowValue += ",0"
+		// 		}
+		// 	}
+
+		logger.Printf("[Analyze] Global summary written to: %s\n", summaryFilePath)
+	}
 }
 
 func initTesting(appcatAppFolder string, sourceRepoFolder string, baselineFolder string, outputFolder string, repoListFile string) ([]string, error) {
